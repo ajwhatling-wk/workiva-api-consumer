@@ -1,6 +1,6 @@
 let sinon = require('sinon'),
   expect = require('chai').expect,
-  request = require('request'),
+  request = require('request-promise-native'),
 
   workivaExporter = require('../../server/workivaExporter');
 
@@ -10,11 +10,14 @@ describe('Workiva Exporter Test', () => {
 
     apiUrl,
     dataToSave,
-    authToken;
+    authToken,
+    fakePromise;
 
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(request, 'put');
+
+    fakePromise = {foo: 'bar'};
+    sandbox.stub(request, 'put').returns(fakePromise);
 
     apiUrl = 'www.example.com';
     dataToSave = '[["row 1", "row 1", "row 1"], ["row 2", "row 2", "row 2"]]';
@@ -22,7 +25,7 @@ describe('Workiva Exporter Test', () => {
   });
 
   afterEach('tear down', () => {
-    sandbox.reset();
+    sandbox.restore();
   });
 
   it('should hit api.app.wdesk.com with the auth token', () => {
@@ -39,6 +42,12 @@ describe('Workiva Exporter Test', () => {
       },
       body: expectedPayload
     });
+  });
+
+  it('should return the promise from the call to request.put', () => {
+    let promise = workivaExporter.exportData(apiUrl, dataToSave, authToken);
+
+    expect(promise).to.equal(fakePromise);
   });
 
 });

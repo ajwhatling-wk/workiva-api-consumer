@@ -1,7 +1,7 @@
-let request = require('request');
+let request = require('request-promise-native');
 
 function doExportToWorkiva(apiUrl, dataString, authToken) {
-  request.put({
+  return request.put({
     url: apiUrl,
     headers: {
       'Content-Type': 'application/json',
