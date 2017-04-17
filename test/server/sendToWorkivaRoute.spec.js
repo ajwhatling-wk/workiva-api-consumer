@@ -1,18 +1,22 @@
 let sinon = require('sinon'),
   expect = require('chai').expect,
+  Chance = require('chance'),
   workivaExporter = require('../../server/workivaExporter'),
   route = require('../../server/sendToWorkivaRoute');
 
 describe('SendToWorkiva Route Tests', () => {
   let sandbox,
+    chance,
 
     fakeCatchPromise,
     fakePromise,
+    fakeRequest,
     fakeResponse,
     fakeExportData;
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
+    chance = new Chance();
 
     fakeCatchPromise = {
       catch: sandbox.stub()
@@ -26,13 +30,25 @@ describe('SendToWorkiva Route Tests', () => {
 
     fakeExportData.returns(fakePromise);
 
+    fakeRequest = {
+      body: {foo: chance.string()}
+    };
+
     fakeResponse = {
       status: sandbox.stub().returns(fakeResponse),
       send: sandbox.stub().returns(fakeResponse)
     };
+
+    process.env.WORKIVA_API_URL = chance.url();
+    process.env.WORKIVA_AUTH_TOKEN = chance.string();
   });
 
-  afterEach(() => sandbox.restore());
+  afterEach(() => {
+    delete process.env.WORKIVA_API_URL;
+    delete process.env.WORKIVA_AUTH_TOKEN;
+
+    sandbox.restore();
+  });
 
   it('should be an object with a "route" property and a "handler" property', () => {
     expect(route.route).to.equal('/sendToWorkiva');
@@ -40,9 +56,19 @@ describe('SendToWorkiva Route Tests', () => {
   });
 
   it('should call exportData on workivaExporter', () => {
-    route.handler();
+    route.handler(fakeRequest, fakeResponse);
 
     sinon.assert.calledOnce(workivaExporter.exportData);
+  });
+
+  it('should call exportData on workivaExporter with the correct parameters', () => {
+    route.handler(fakeRequest, fakeResponse);
+
+    sinon.assert.calledWithExactly(workivaExporter.exportData, {
+      apiUrl: process.env.WORKIVA_API_URL,
+      authToken: process.env.WORKIVA_AUTH_TOKEN,
+      dataToSave: fakeRequest.body
+    });
   });
 
   it('should call exportData and when export succeeds it should call response.send()', () => {
