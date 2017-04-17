@@ -2,6 +2,7 @@ let sinon = require('sinon'),
   expect = require('chai').expect,
   request = require('request-promise-native'),
 
+  logger = require('../../server/utils/logger'),
   promiseBuilder = require('../../server/utils/promiseBuilder'),
 
   exportData = require('../../server/workivaExporter').exportData;
@@ -36,9 +37,11 @@ describe('Workiva Exporter Test', () => {
     sandbox = sinon.sandbox.create();
 
     sandbox.stub(promiseBuilder, 'create').returns('i am a promise');
+    sandbox.stub(logger, 'log');
 
     fakePostPromise = {};
     fakePostPromise.then = sandbox.stub().returns(fakePostPromise);
+    fakePostPromise.catch = sandbox.stub().returns(fakePostPromise);
 
     fakePutPromise = {then: sandbox.stub()};
 
@@ -142,5 +145,26 @@ describe('Workiva Exporter Test', () => {
         'values': exporterParams.dataToSave
       }
     });
+  });
+
+  it('should resolve the promise after all requests successfully resolve', () => {
+    let firstThenExecutor = fakePostPromise.then.getCall(0).args[0],
+      secondThenExecutor = fakePostPromise.then.getCall(1).args[0],
+      thirdThenExecutor = fakePostPromise.then.getCall(2).args[0];
+
+    firstThenExecutor(JSON.stringify(firstPostResponse));
+    secondThenExecutor(JSON.stringify(secondPostResponse));
+    thirdThenExecutor();
+
+    sinon.assert.calledOnce(resolveStub);
+  });
+
+  it('should reject if the catch is triggered', () => {
+    let catchExecutor = fakePostPromise.catch.getCall(0).args[0];
+    catchExecutor();
+
+    sinon.assert.calledOnce(rejectStub);
+    expect(fakePostPromise.catch.getCall(0).calledAfter(fakePostPromise.then.getCall(2)))
+      .to.equal(true, 'catch() should be called after the last then()');
   });
 });

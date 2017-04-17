@@ -1,4 +1,5 @@
 let request = require('request-promise-native'),
+  logger = require('./utils/logger'),
   promiseBuilder = require('./utils/promiseBuilder');
 
 function buildSpreadsheetsCreationParams(exportParams) {
@@ -37,6 +38,7 @@ function doExportToWorkiva(params) {
     sheetId = '';
 
   return promiseBuilder.create((resolve, reject) => {
+    logger.log(`Creating spreadsheet`);
     request
       .post(postParams)
       .then(response => {
@@ -45,6 +47,8 @@ function doExportToWorkiva(params) {
 
         spreadsheetId = json.data.id;
 
+        logger.log(`Creating sheet inside of spreadsheet ${spreadsheetId}`);
+
         return request.post(sheetsParams)
       })
       .then(response => {
@@ -52,8 +56,12 @@ function doExportToWorkiva(params) {
         sheetId = json.data.id;
         let sheetUpdateParams = buildSheetUpdateParams(params, spreadsheetId, sheetId);
 
+        logger.log(`Inserting data into sheet ${sheetId} of spreadsheet ${spreadsheetId}`);
+
         return request.put(sheetUpdateParams);
-      });
+      })
+      .then(resolve)
+      .catch(reject);
   });
 }
 
