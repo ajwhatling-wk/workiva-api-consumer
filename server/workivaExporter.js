@@ -18,8 +18,22 @@ function buildSheetsCreationParams(params, json) {
   };
 }
 
+function buildSheetUpdateParams(params, spreadsheetId, sheetId) {
+  return {
+    url: `${params.apiUrl}/spreadsheets/${spreadsheetId}/sheets/${sheetId}/data`,
+    headers: {
+      'Authorization': `Bearer ${params.authToken}`
+    },
+    body: {
+      'values': params.dataToSave
+    }
+  };
+}
+
 function doExportToWorkiva(params) {
-  let postParams = buildSpreadsheetsCreationParams(params);
+  let postParams = buildSpreadsheetsCreationParams(params),
+    spreadsheetId = '',
+    sheetId = '';
 
   request
     .post(postParams)
@@ -27,9 +41,17 @@ function doExportToWorkiva(params) {
       let json = JSON.parse(response),
         sheetsParams = buildSheetsCreationParams(params, json);
 
+      spreadsheetId = json.data.id;
+
       return request.post(sheetsParams)
     })
-    .then(() => request.put());
+    .then(response => {
+      let json = JSON.parse(response);
+      sheetId = json.data.id;
+      let sheetUpdateParams = buildSheetUpdateParams(params, spreadsheetId, sheetId);
+
+      return request.put(sheetUpdateParams);
+    });
 }
 
 module.exports = {

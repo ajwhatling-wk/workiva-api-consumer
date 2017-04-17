@@ -17,7 +17,8 @@ describe('Workiva Exporter Test', () => {
     fakePostPromise,
     fakePutPromise,
 
-    firstPostResponse;
+    firstPostResponse,
+    secondPostResponse;
 
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
@@ -36,13 +37,20 @@ describe('Workiva Exporter Test', () => {
       }
     };
 
+    secondPostResponse = {
+      data: {
+        id: 'sheetId-0000'
+      }
+    };
+
     apiUrl = 'www.example.com';
     dataToSave = '[["row 1", "row 1", "row 1"], ["row 2", "row 2", "row 2"]]';
     authToken = 'some-auth-token';
 
     exporterParams = {
-      apiUrl: apiUrl,
-      authToken: authToken
+      apiUrl,
+      authToken,
+      dataToSave
     };
   });
 
@@ -83,7 +91,7 @@ describe('Workiva Exporter Test', () => {
     exportData(exporterParams);
 
     let thenExecutor = fakePostPromise.then.getCall(0).args[0],
-        postPromise = thenExecutor(JSON.stringify(firstPostResponse));
+      postPromise = thenExecutor(JSON.stringify(firstPostResponse));
 
     expect(postPromise).to.equal(fakePostPromise);
   });
@@ -92,8 +100,29 @@ describe('Workiva Exporter Test', () => {
     exportData(exporterParams);
 
     let thenExecutor = fakePostPromise.then.getCall(1).args[0],
-        putPromise = thenExecutor();
+      putPromise = thenExecutor(JSON.stringify(secondPostResponse));
 
     expect(putPromise).to.equal(fakePutPromise);
+  });
+
+  it('should call PUT with the correct parameters', () => {
+    exportData(exporterParams);
+
+    let firstThenExecutor = fakePostPromise.then.getCall(0).args[0],
+      secondThenExecutor = fakePostPromise.then.getCall(1).args[0];
+
+    firstThenExecutor(JSON.stringify(firstPostResponse));
+    secondThenExecutor(JSON.stringify(secondPostResponse));
+
+    sinon.assert.calledOnce(request.put);
+    sinon.assert.calledWithExactly(request.put, {
+      url: `${exporterParams.apiUrl}/spreadsheets/${firstPostResponse.data.id}/sheets/${secondPostResponse.data.id}/data`,
+      headers: {
+        'Authorization': `Bearer ${exporterParams.authToken}`
+      },
+      body: {
+        'values': exporterParams.dataToSave
+      }
+    })
   })
 });
