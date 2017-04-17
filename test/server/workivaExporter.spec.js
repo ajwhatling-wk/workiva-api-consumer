@@ -15,7 +15,9 @@ describe('Workiva Exporter Test', () => {
     exporterParams,
 
     fakePostPromise,
-    fakePutPromise;
+    fakePutPromise,
+
+    firstPostResponse;
 
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
@@ -28,37 +30,25 @@ describe('Workiva Exporter Test', () => {
     sandbox.stub(request, 'post').returns(fakePostPromise);
     sandbox.stub(request, 'put').returns(fakePutPromise);
 
+    firstPostResponse = {
+      data: {
+        id: 'i-dont-care'
+      }
+    };
+
     apiUrl = 'www.example.com';
     dataToSave = '[["row 1", "row 1", "row 1"], ["row 2", "row 2", "row 2"]]';
     authToken = 'some-auth-token';
 
     exporterParams = {
       apiUrl: apiUrl,
-      /*authToken: authToken,
-       dataToSave: dataToSave*/
+      authToken: authToken
     };
   });
 
   afterEach('tear down', () => {
     sandbox.restore();
   });
-
-  /*  it.skip('should hit the api url in the parameter object with the auth token', () => {
-   let expectedPayload = JSON.stringify({values: dataToSave});
-
-   workivaExporter.exportData(exporterParams);
-
-   sinon.assert.calledOnce(request.put);
-   sinon.assert.calledWithExactly(request.put, {
-   url: apiUrl,
-   headers: {
-   'Content-Type': 'application/json',
-   'Authorization': `Bearer ${authToken}`
-   },
-   body: expectedPayload
-   });
-   });*/
-
 
   it('should make a POST request to the /spreadsheets end point of the API', () => {
     exportData(exporterParams);
@@ -78,16 +68,22 @@ describe('Workiva Exporter Test', () => {
     request.post.reset();
 
     let thenExecutor = fakePostPromise.then.getCall(0).args[0];
-    thenExecutor();
+    thenExecutor(JSON.stringify(firstPostResponse));
 
     sinon.assert.calledOnce(request.post);
+    sinon.assert.calledWithExactly(request.post, {
+      url: `${exporterParams.apiUrl}/spreadsheets/${firstPostResponse.data.id}/sheets`,
+      headers: {
+        'Authorization': `Bearer ${exporterParams.authToken}`
+      }
+    });
   });
 
   it('should return the promise from the second POST call', () => {
     exportData(exporterParams);
 
     let thenExecutor = fakePostPromise.then.getCall(0).args[0],
-        postPromise = thenExecutor();
+        postPromise = thenExecutor(JSON.stringify(firstPostResponse));
 
     expect(postPromise).to.equal(fakePostPromise);
   });
