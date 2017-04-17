@@ -1,6 +1,7 @@
 let sinon = require('sinon'),
   expect = require('chai').expect,
   Chance = require('chance'),
+  logger = require('../../server/utils/logger'),
   workivaExporter = require('../../server/workivaExporter'),
   route = require('../../server/sendToWorkivaRoute');
 
@@ -17,6 +18,8 @@ describe('SendToWorkiva Route Tests', () => {
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     chance = new Chance();
+
+    sandbox.stub(logger, 'log');
 
     fakeCatchPromise = {
       catch: sandbox.stub()
