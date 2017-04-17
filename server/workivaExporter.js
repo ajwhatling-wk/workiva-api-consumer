@@ -1,23 +1,20 @@
 let request = require('request-promise-native');
 
+function buildPostParameters(exportParams, authToken) {
+  return {
+    url: `${exportParams.apiUrl}/spreadsheets`,
+    headers: {
+      'Authorization': `Bearer ${authToken}`
+    }
+  };
+}
+
 function doExportToWorkiva(params) {
-  /*let data = params.dataToSave,
-   req = {
-   url: params.apiUrl,
-   headers: {
-   'Content-Type': 'application/json',
-   'Authorization': `Bearer ${params.authToken}`
-   },
-   body: JSON.stringify({values: data})
-   };
-
-   return request.put(req);*/
-
-  let createUrl = `${params.apiUrl}/spreadsheets`;
+  let postParams = buildPostParameters(params);
 
   request
-    .post({url: createUrl})
-    .then(() => request.put());
+    .post(postParams)
+    .then(() => request.post());
 }
 
 module.exports = {

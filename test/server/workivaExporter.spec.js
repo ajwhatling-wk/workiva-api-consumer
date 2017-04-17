@@ -20,9 +20,8 @@ describe('Workiva Exporter Test', () => {
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
 
-
     fakePostPromise = {then: sandbox.stub()};
-    fakePutPromise = {foo: 'bar'};
+    fakePutPromise = {then: sandbox.stub()};
 
     sandbox.stub(request, 'post').returns(fakePostPromise);
     sandbox.stub(request, 'put').returns(fakePutPromise);
@@ -63,26 +62,31 @@ describe('Workiva Exporter Test', () => {
     exportData(exporterParams);
 
     sinon.assert.calledOnce(request.post);
-    sinon.assert.calledWithExactly(request.post, {url: `${exporterParams.apiUrl}/spreadsheets`});
+    sinon.assert.calledWithExactly(request.post, {
+      url: `${exporterParams.apiUrl}/spreadsheets`,
+      headers: {
+        'Authorization': `Bearer ${exporterParams.authToken}`
+      }
+    });
   });
 
-  it('should make a PUT call after the POST request succeed', () => {
+  it('should make a second POST call after the POST request succeed', () => {
     exportData(exporterParams);
 
-    let thenExecutor = fakePostPromise.then.getCall(0).args[0];
+    request.post.reset();
 
+    let thenExecutor = fakePostPromise.then.getCall(0).args[0];
     thenExecutor();
 
-    sinon.assert.calledOnce(request.put);
+    sinon.assert.calledOnce(request.post);
   });
 
-  it('should return the promise from a PUT call', () => {
+  it('should return the promise from the second POST call', () => {
     exportData(exporterParams);
 
     let thenExecutor = fakePostPromise.then.getCall(0).args[0],
+        postPromise = thenExecutor();
 
-      putPromise = thenExecutor();
-
-    expect(putPromise).to.equal(fakePutPromise);
+    expect(postPromise).to.equal(fakePostPromise);
   });
 });
