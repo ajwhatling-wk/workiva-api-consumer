@@ -20,7 +20,9 @@ describe('Workiva Exporter Test', () => {
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
 
-    fakePostPromise = {then: sandbox.stub()};
+    fakePostPromise = {};
+    fakePostPromise.then = sandbox.stub().returns(fakePostPromise);
+
     fakePutPromise = {then: sandbox.stub()};
 
     sandbox.stub(request, 'post').returns(fakePostPromise);
@@ -89,4 +91,13 @@ describe('Workiva Exporter Test', () => {
 
     expect(postPromise).to.equal(fakePostPromise);
   });
+
+  it('should make a PUT after the second POST call', () => {
+    exportData(exporterParams);
+
+    let thenExecutor = fakePostPromise.then.getCall(1).args[0],
+        putPromise = thenExecutor();
+
+    expect(putPromise).to.equal(fakePutPromise);
+  })
 });

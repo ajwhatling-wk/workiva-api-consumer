@@ -14,7 +14,8 @@ function doExportToWorkiva(params) {
 
   request
     .post(postParams)
-    .then(() => request.post());
+    .then(() => request.post())
+    .then(() => request.put());
 }
 
 module.exports = {
