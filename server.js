@@ -1,10 +1,12 @@
 let express = require('express'),
-  serverApp = express();
+  serverApp = express(),
+  logger = require('./server/utils/logger'),
+  sendToWorkivaRoute = require('./server/sendToWorkivaRoute');
 
 const port = 8145;
 
-serverApp.get('/', (req, res) => res.send('Hello, world!'));
+serverApp.get(sendToWorkivaRoute.route, sendToWorkivaRoute.handler);
 
 serverApp.listen(port, () => {
-  console.log(`Server started on port ${port}.`);
+  logger.log(`Server started on port ${port}.`);
 });
