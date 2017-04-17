@@ -2,6 +2,8 @@ let sinon = require('sinon'),
   expect = require('chai').expect,
   request = require('request-promise-native'),
 
+  promiseBuilder = require('../../server/utils/promiseBuilder'),
+
   exportData = require('../../server/workivaExporter').exportData;
 
 
@@ -17,11 +19,23 @@ describe('Workiva Exporter Test', () => {
     fakePostPromise,
     fakePutPromise,
 
+    resolveStub,
+    rejectStub,
+
     firstPostResponse,
-    secondPostResponse;
+    secondPostResponse,
+
+    exportToWorkivaExecutor,
+    exportToWorkivaPromise;
+
+  function getPromiseExecutor() {
+    return promiseBuilder.create.getCall(0).args[0];
+  }
 
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
+
+    sandbox.stub(promiseBuilder, 'create').returns('i am a promise');
 
     fakePostPromise = {};
     fakePostPromise.then = sandbox.stub().returns(fakePostPromise);
@@ -52,15 +66,27 @@ describe('Workiva Exporter Test', () => {
       authToken,
       dataToSave
     };
+
+    resolveStub = sandbox.stub();
+    rejectStub = sandbox.stub();
+  });
+
+  beforeEach('set up - call system under test', () => {
+    exportToWorkivaPromise = exportData(exporterParams);
+    exportToWorkivaExecutor = getPromiseExecutor();
+    exportToWorkivaExecutor(resolveStub, rejectStub);
   });
 
   afterEach('tear down', () => {
     sandbox.restore();
   });
 
-  it('should make a POST request to the /spreadsheets end point of the API', () => {
-    exportData(exporterParams);
+  it('should create promise from the promise builder and return it', () => {
+    sinon.assert.calledOnce(promiseBuilder.create);
+    expect(exportToWorkivaPromise).to.equal('i am a promise');
+  });
 
+  it('should make a POST request to the /spreadsheets end point of the API', () => {
     sinon.assert.calledOnce(request.post);
     sinon.assert.calledWithExactly(request.post, {
       url: `${exporterParams.apiUrl}/spreadsheets`,
@@ -71,8 +97,6 @@ describe('Workiva Exporter Test', () => {
   });
 
   it('should make a second POST call after the POST request succeed', () => {
-    exportData(exporterParams);
-
     request.post.reset();
 
     let thenExecutor = fakePostPromise.then.getCall(0).args[0];
@@ -88,8 +112,6 @@ describe('Workiva Exporter Test', () => {
   });
 
   it('should return the promise from the second POST call', () => {
-    exportData(exporterParams);
-
     let thenExecutor = fakePostPromise.then.getCall(0).args[0],
       postPromise = thenExecutor(JSON.stringify(firstPostResponse));
 
@@ -97,8 +119,6 @@ describe('Workiva Exporter Test', () => {
   });
 
   it('should make a PUT after the second POST call', () => {
-    exportData(exporterParams);
-
     let thenExecutor = fakePostPromise.then.getCall(1).args[0],
       putPromise = thenExecutor(JSON.stringify(secondPostResponse));
 
@@ -106,8 +126,6 @@ describe('Workiva Exporter Test', () => {
   });
 
   it('should call PUT with the correct parameters', () => {
-    exportData(exporterParams);
-
     let firstThenExecutor = fakePostPromise.then.getCall(0).args[0],
       secondThenExecutor = fakePostPromise.then.getCall(1).args[0];
 
@@ -123,6 +141,6 @@ describe('Workiva Exporter Test', () => {
       body: {
         'values': exporterParams.dataToSave
       }
-    })
-  })
+    });
+  });
 });

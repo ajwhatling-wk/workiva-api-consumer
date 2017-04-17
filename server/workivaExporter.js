@@ -1,4 +1,5 @@
-let request = require('request-promise-native');
+let request = require('request-promise-native'),
+  promiseBuilder = require('./utils/promiseBuilder');
 
 function buildSpreadsheetsCreationParams(exportParams) {
   return {
@@ -35,23 +36,25 @@ function doExportToWorkiva(params) {
     spreadsheetId = '',
     sheetId = '';
 
-  request
-    .post(postParams)
-    .then(response => {
-      let json = JSON.parse(response),
-        sheetsParams = buildSheetsCreationParams(params, json);
+  return promiseBuilder.create((resolve, reject) => {
+    request
+      .post(postParams)
+      .then(response => {
+        let json = JSON.parse(response),
+          sheetsParams = buildSheetsCreationParams(params, json);
 
-      spreadsheetId = json.data.id;
+        spreadsheetId = json.data.id;
 
-      return request.post(sheetsParams)
-    })
-    .then(response => {
-      let json = JSON.parse(response);
-      sheetId = json.data.id;
-      let sheetUpdateParams = buildSheetUpdateParams(params, spreadsheetId, sheetId);
+        return request.post(sheetsParams)
+      })
+      .then(response => {
+        let json = JSON.parse(response);
+        sheetId = json.data.id;
+        let sheetUpdateParams = buildSheetUpdateParams(params, spreadsheetId, sheetId);
 
-      return request.put(sheetUpdateParams);
-    });
+        return request.put(sheetUpdateParams);
+      });
+  });
 }
 
 module.exports = {
