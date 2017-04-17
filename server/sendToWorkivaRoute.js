@@ -5,6 +5,7 @@ module.exports = {
   route: '/sendToWorkiva',
   handler: (req, res) => {
     logger.log('About to do export to Workiva');
+
     workivaExporter
       .exportData({
         apiUrl: process.env.WORKIVA_API_URL,
