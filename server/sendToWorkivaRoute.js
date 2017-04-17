@@ -8,6 +8,9 @@ module.exports = {
       .then(() => {
         res.send('');
       })
-      .catch(() => {});
+      .catch(() => {
+        res.status(400);
+        res.send('failed');
+      });
   }
 };

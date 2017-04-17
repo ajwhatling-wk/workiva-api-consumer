@@ -8,6 +8,7 @@ describe('SendToWorkiva Route Tests', () => {
 
     fakeCatchPromise,
     fakePromise,
+    fakeResponse,
     fakeExportData;
 
   beforeEach(() => {
@@ -24,6 +25,11 @@ describe('SendToWorkiva Route Tests', () => {
     fakeExportData = sandbox.stub(workivaExporter, 'exportData');
 
     fakeExportData.returns(fakePromise);
+
+    fakeResponse = {
+      status: sandbox.stub().returns(fakeResponse),
+      send: sandbox.stub().returns(fakeResponse)
+    };
   });
 
   afterEach(() => sandbox.restore());
@@ -39,11 +45,7 @@ describe('SendToWorkiva Route Tests', () => {
     sinon.assert.calledOnce(workivaExporter.exportData);
   });
 
-  it('should call exportData and when export finishes it should call response.send()', () => {
-    let fakeResponse = {
-      send: sandbox.stub()
-    };
-
+  it('should call exportData and when export succeeds it should call response.send()', () => {
     route.handler({}, fakeResponse);
 
     let thenCallback = fakePromise.then.getCall(0).args[0];
@@ -52,5 +54,19 @@ describe('SendToWorkiva Route Tests', () => {
 
     sinon.assert.calledOnce(fakeResponse.send);
     sinon.assert.calledWithExactly(fakeResponse.send, '');
+  });
+
+  it('should call exportData and when export fails it should call response.status(400).send("failed")', () => {
+    route.handler({}, fakeResponse);
+
+    let catchCallback = fakeCatchPromise.catch.getCall(0).args[0];
+
+    catchCallback();
+
+    sinon.assert.calledOnce(fakeResponse.status);
+    sinon.assert.calledWithExactly(fakeResponse.status, 400);
+
+    sinon.assert.calledOnce(fakeResponse.send);
+    sinon.assert.calledWithExactly(fakeResponse.send, 'failed');
   });
 });
