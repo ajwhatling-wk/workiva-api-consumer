@@ -11,6 +11,9 @@ describe('Workiva Exporter Test', () => {
     apiUrl,
     dataToSave,
     authToken,
+
+    exporterParams,
+
     fakePromise;
 
   beforeEach('set up', () => {
@@ -22,16 +25,22 @@ describe('Workiva Exporter Test', () => {
     apiUrl = 'www.example.com';
     dataToSave = '[["row 1", "row 1", "row 1"], ["row 2", "row 2", "row 2"]]';
     authToken = 'some-auth-token';
+
+    exporterParams = {
+      apiUrl: apiUrl,
+      authToken: authToken,
+      dataToSave: dataToSave
+    };
   });
 
   afterEach('tear down', () => {
     sandbox.restore();
   });
 
-  it('should hit api.app.wdesk.com with the auth token', () => {
+  it('should hit the api url in the parameter object with the auth token', () => {
     let expectedPayload = JSON.stringify({values: dataToSave});
 
-    workivaExporter.exportData(apiUrl, dataToSave, authToken);
+    workivaExporter.exportData(exporterParams);
 
     sinon.assert.calledOnce(request.put);
     sinon.assert.calledWithExactly(request.put, {
@@ -45,7 +54,7 @@ describe('Workiva Exporter Test', () => {
   });
 
   it('should return the promise from the call to request.put', () => {
-    let promise = workivaExporter.exportData(apiUrl, dataToSave, authToken);
+    let promise = workivaExporter.exportData(exporterParams);
 
     expect(promise).to.equal(fakePromise);
   });
