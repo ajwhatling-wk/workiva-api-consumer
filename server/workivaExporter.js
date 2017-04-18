@@ -1,5 +1,6 @@
 let request = require('request-promise-native'),
   logger = require('./utils/logger'),
+  clock = require('./utils/clock'),
   promiseBuilder = require('./utils/promiseBuilder');
 
 function buildSpreadsheetsCreationParams(exportParams) {
@@ -7,7 +8,10 @@ function buildSpreadsheetsCreationParams(exportParams) {
     url: `${exportParams.apiUrl}/spreadsheets`,
     headers: {
       'Authorization': `Bearer ${exportParams.authToken}`
-    }
+    },
+    body: JSON.stringify({
+      'name': `workiva-api-consumer-sheet-${clock.getTimeSeconds()}`
+    })
   };
 }
 
@@ -16,7 +20,8 @@ function buildSheetsCreationParams(params, json) {
     url: `${params.apiUrl}/spreadsheets/${json.data.id}/sheets`,
     headers: {
       'Authorization': `Bearer ${params.authToken}`
-    }
+    },
+    body: JSON.stringify({index: 0, name: 'node-js-github-issues'})
   };
 }
 

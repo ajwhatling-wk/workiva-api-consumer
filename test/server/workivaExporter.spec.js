@@ -3,6 +3,7 @@ let sinon = require('sinon'),
   request = require('request-promise-native'),
 
   logger = require('../../server/utils/logger'),
+  clock = require('../../server/utils/clock'),
   promiseBuilder = require('../../server/utils/promiseBuilder'),
 
   exportData = require('../../server/workivaExporter').exportData;
@@ -26,6 +27,8 @@ describe('Workiva Exporter Test', () => {
     firstPostResponse,
     secondPostResponse,
 
+    clockTime,
+
     exportToWorkivaExecutor,
     exportToWorkivaPromise;
 
@@ -36,8 +39,11 @@ describe('Workiva Exporter Test', () => {
   beforeEach('set up', () => {
     sandbox = sinon.sandbox.create();
 
+    clockTime = parseInt(Math.random() * 100);
+
     sandbox.stub(promiseBuilder, 'create').returns('i am a promise');
     sandbox.stub(logger, 'log');
+    sandbox.stub(clock, 'getTimeSeconds').returns(clockTime);
 
     fakePostPromise = {};
     fakePostPromise.then = sandbox.stub().returns(fakePostPromise);
@@ -95,7 +101,10 @@ describe('Workiva Exporter Test', () => {
       url: `${exporterParams.apiUrl}/spreadsheets`,
       headers: {
         'Authorization': `Bearer ${exporterParams.authToken}`
-      }
+      },
+      body: JSON.stringify({
+        name: `workiva-api-consumer-sheet-${clockTime}`
+      })
     });
   });
 
@@ -110,7 +119,8 @@ describe('Workiva Exporter Test', () => {
       url: `${exporterParams.apiUrl}/spreadsheets/${firstPostResponse.data.id}/sheets`,
       headers: {
         'Authorization': `Bearer ${exporterParams.authToken}`
-      }
+      },
+      body: JSON.stringify({index: 0, name: 'node-js-github-issues'})
     });
   });
 
