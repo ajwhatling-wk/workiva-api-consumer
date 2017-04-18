@@ -2,11 +2,15 @@ let promiseBuilder = require('./utils/promiseBuilder'),
   request = require('request-promise-native');
 
 function importGithubIssues(owner, repo) {
-  let url = `https://api.github.com/repos/${owner}/${repo}/issues?status=open`;
+  let getParams = {
+    url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open`,
+    headers: {
+      'User-Agent': 'workiva-api-consumer'
+    }
+  };
 
   return promiseBuilder.create((resolve, reject) => {
-
-    request.get(url)
+    request.get(getParams)
       .then(response => {
         let issuesJsonResponse = JSON.parse(response);
         let issues = [];

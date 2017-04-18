@@ -87,6 +87,13 @@ describe('Github Importer tests', () => {
   });
 
   it('should perform a GET request to fetch the open issues for the given repo and repo owner', () => {
+    let expectGetParams = {
+      url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open`,
+      headers: {
+        'User-Agent': 'workiva-api-consumer'
+      }
+    };
+
     importGithubIssues(owner, repo);
 
     sinon.assert.notCalled(request.get);
@@ -94,7 +101,7 @@ describe('Github Importer tests', () => {
     callPromiseExecutor(stubResolve, stubReject);
 
     sinon.assert.calledOnce(request.get);
-    sinon.assert.calledWithExactly(request.get, `https://api.github.com/repos/${owner}/${repo}/issues?status=open`);
+    sinon.assert.calledWithExactly(request.get, expectGetParams);
   });
 
   it('should convert the json to a list of rows with the issue title and user', () => {
