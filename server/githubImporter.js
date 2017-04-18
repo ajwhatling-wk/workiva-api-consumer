@@ -1,4 +1,5 @@
 let promiseBuilder = require('./utils/promiseBuilder'),
+  logger = require('./utils/logger'),
   request = require('request-promise-native');
 
 function importGithubIssues(owner, repo) {
@@ -6,7 +7,7 @@ function importGithubIssues(owner, repo) {
     CSECRET = process.env.GH_CLIENT_SECRET;
 
   let getParams = {
-    url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open&client_id=${CID}&client_secret=${CSECRET}`,
+    url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open&page=1&per_page=25&client_id=${CID}&client_secret=${CSECRET}`,
     headers: {
       'User-Agent': 'workiva-api-consumer'
     }
@@ -17,6 +18,8 @@ function importGithubIssues(owner, repo) {
       .then(response => {
         let issuesJsonResponse = JSON.parse(response);
         let issues = [];
+
+        logger.log(`Github payload size: ${response.length / 1024} Kb`);
 
         for (let issueJson of issuesJsonResponse) {
           issues.push([issueJson.title, issueJson.user.login]);

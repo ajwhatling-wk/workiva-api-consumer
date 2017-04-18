@@ -74,6 +74,8 @@ describe('Github Importer tests', () => {
     stubResolve = sandbox.stub();
     stubReject = sandbox.stub();
 
+    sandbox.stub(logger, 'log');
+
     sandbox.stub(request, 'get').returns(httpGetPromise);
     sandbox.stub(promiseBuilder, 'create').returns(fakePromise);
 
@@ -96,7 +98,7 @@ describe('Github Importer tests', () => {
 
   it('should perform a GET request to fetch the open issues for the given repo and repo owner', () => {
     let expectGetParams = {
-      url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open&client_id=${process.env.GH_CLIENT_ID}&client_secret=${process.env.GH_CLIENT_SECRET}`,
+      url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open&page=1&per_page=25&client_id=${process.env.GH_CLIENT_ID}&client_secret=${process.env.GH_CLIENT_SECRET}`,
       headers: {
         'User-Agent': 'workiva-api-consumer'
       }
