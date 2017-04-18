@@ -21,14 +21,14 @@ module.exports = {
             logger.log('Export to workiva succeeded');
             res.send('');
           })
-          .catch(() => {
-            logger.log('Export to workiva failed');
+          .catch(reason => {
+            logger.log(`Export to workiva failed: ${reason}`);
             res.status(400);
-            res.send('failed');
+            res.send(reason);
           });
       })
       .catch(err => {
-        logger.log('Import from github failed');
+        logger.log(`Import from github failed: ${err}`);
         res.status(400);
         res.send(err);
       });

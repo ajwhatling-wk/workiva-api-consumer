@@ -95,7 +95,7 @@ describe('SendToWorkiva Route Tests', () => {
   it('should respond with status 400 and send the error when github import fails', () => {
     route.handler(fakeRequest, fakeResponse);
 
-    let error = 'failed';
+    let error = chance.word();
     fakeGithubPromise.catch.getCall(0).args[0](error);
     
     sinon.assert.calledOnce(fakeResponse.status);
@@ -147,14 +147,15 @@ describe('SendToWorkiva Route Tests', () => {
     let data = [[chance.name(), chance.word()]];
     fakeGithubPromise.then.getCall(0).args[0](data);
 
-    let catchCallback = fakeCatchPromise.catch.getCall(0).args[0];
+    let error = chance.word(),
+      catchCallback = fakeCatchPromise.catch.getCall(0).args[0];
 
-    catchCallback();
+    catchCallback(error);
 
     sinon.assert.calledOnce(fakeResponse.status);
     sinon.assert.calledWithExactly(fakeResponse.status, 400);
 
     sinon.assert.calledOnce(fakeResponse.send);
-    sinon.assert.calledWithExactly(fakeResponse.send, 'failed');
+    sinon.assert.calledWithExactly(fakeResponse.send, error);
   });
 });
