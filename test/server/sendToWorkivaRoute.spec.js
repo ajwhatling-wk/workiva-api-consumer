@@ -89,7 +89,6 @@ describe('SendToWorkiva Route Tests', () => {
     let error = 'failed';
     fakeGithubPromise.catch.getCall(0).args[0](error);
 
-    sinon.assert.calledOnce(fakeGithubPromise.catch);
     sinon.assert.notCalled(workivaExporter.exportData);
   });
 
