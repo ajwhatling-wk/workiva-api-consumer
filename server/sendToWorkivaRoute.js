@@ -10,6 +10,7 @@ module.exports = {
     githubImporter
       .importGithubIssues(req.body.github_owner, req.body.github_repo)
       .then(data => {
+        logger.log('Import from github succeeded');
         workivaExporter
           .exportData({
             apiUrl: process.env.WORKIVA_API_URL,
@@ -17,16 +18,17 @@ module.exports = {
             dataToSave: data
           })
           .then(() => {
-            logger.log('Export succeeded');
+            logger.log('Export to workiva succeeded');
             res.send('');
           })
           .catch(() => {
-            logger.log('Export failed');
+            logger.log('Export to workiva failed');
             res.status(400);
             res.send('failed');
           });
       })
       .catch(err => {
+        logger.log('Import from github failed');
         res.status(400);
         res.send(err);
       });
