@@ -76,9 +76,17 @@ describe('Github Importer tests', () => {
 
     sandbox.stub(request, 'get').returns(httpGetPromise);
     sandbox.stub(promiseBuilder, 'create').returns(fakePromise);
+
+    process.env.GH_CLIENT_ID = chance.string();
+    process.env.GH_CLIENT_SECRET = chance.string();
   });
 
-  afterEach(() => sandbox.restore());
+  afterEach(() => {
+    sandbox.restore();
+
+    delete process.env.GH_CLIENT_ID;
+    delete process.env.GH_CLIENT_SECRET;
+  });
 
   it('should return a promise', () => {
     let issuesPromise = importGithubIssues(owner, repo);
@@ -88,7 +96,7 @@ describe('Github Importer tests', () => {
 
   it('should perform a GET request to fetch the open issues for the given repo and repo owner', () => {
     let expectGetParams = {
-      url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open`,
+      url: `https://api.github.com/repos/${owner}/${repo}/issues?status=open&client_id=${process.env.GH_CLIENT_ID}&client_secret=${process.env.GH_CLIENT_SECRET}`,
       headers: {
         'User-Agent': 'workiva-api-consumer'
       }
