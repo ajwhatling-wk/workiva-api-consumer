@@ -151,9 +151,9 @@ describe('Workiva Exporter Test', () => {
       headers: {
         'Authorization': `Bearer ${exporterParams.authToken}`
       },
-      body: {
+      body: JSON.stringify({
         'values': exporterParams.dataToSave
-      }
+      })
     });
   });
 

@@ -31,9 +31,9 @@ function buildSheetUpdateParams(params, spreadsheetId, sheetId) {
     headers: {
       'Authorization': `Bearer ${params.authToken}`
     },
-    body: {
+    body: JSON.stringify({
       'values': params.dataToSave
-    }
+    })
   };
 }
 
